@@ -58,6 +58,7 @@ except Exception as e:
 INSIGHTS = {
     "genre": "",
     "treemap": "",
+    "hist": "",
 }
 
 
@@ -160,7 +161,60 @@ st.plotly_chart(fig2, use_container_width=True)
 insight_box("treemap")
 
 # ------------------------------------------------------------
+# 구역 3: 총 관객 히스토그램
+# ------------------------------------------------------------
+st.divider()
+st.header("③ 총 관객의 분포")
+st.write("영화를 총 관객 10만 명 단위 구간으로 나누어, 각 구간에 영화가 몇 편 있는지 세었습니다.")
+
+BIN = 100_000  # 구간 하나의 너비 (10만 명)
+
+aud = df["total_audi"].dropna()
+aud = aud[aud >= 0]
+
+bin_idx = (aud // BIN).astype(int)
+hist = bin_idx.value_counts().reindex(range(bin_idx.max() + 1), fill_value=0)
+
+lo = hist.index * BIN // 10_000          # 구간 시작 (만 명)
+hi = (hist.index + 1) * BIN // 10_000    # 구간 끝 (만 명)
+range_text = [f"{a}~{b}만 명" for a, b in zip(lo, hi)]
+
+fig3 = go.Figure(
+    go.Bar(
+        x=(lo + hi) / 2,
+        y=hist.values,
+        width=(hi - lo),
+        marker=dict(color="#E4572E", line=dict(color="#FFFFFF", width=1)),
+        customdata=range_text,
+        hovertemplate="<b>%{customdata}</b><br>영화 %{y}편<extra></extra>",
+    )
+)
+fig3.update_layout(
+    height=450,
+    bargap=0,
+    margin=dict(t=20, b=20, l=20, r=20),
+    xaxis_title="총 관객 (만 명)",
+    yaxis_title="영화 편수",
+)
+st.plotly_chart(fig3, use_container_width=True)
+
+# 대부분의 영화가 몰린 구간 / 관객이 가장 많은 영화
+peak_bin = hist.idxmax()
+peak_count = int(hist.max())
+peak_share = peak_count / len(aud) * 100
+top_movie = df.loc[df["total_audi"].idxmax()]
+
+st.success(
+    f"📌 대부분의 영화는 **{range_text[peak_bin]}** 구간에 몰려 있습니다. "
+    f"({peak_count}편, 전체의 {peak_share:.1f}%)\n\n"
+    f"🏆 총 관객이 가장 많은 영화는 **{top_movie['movieNm']}**입니다. "
+    f"({int(top_movie['total_audi']):,}명)"
+)
+
+insight_box("hist")
+
+# ------------------------------------------------------------
 # 다음 구역이 들어올 자리
 # ------------------------------------------------------------
 # st.divider()
-# st.header("③ ...")
+# st.header("④ ...")
