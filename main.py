@@ -60,6 +60,7 @@ INSIGHTS = {
     "treemap": "",
     "hist": "",
     "scatter": "",
+    "box": "",
 }
 
 
@@ -267,7 +268,52 @@ st.plotly_chart(fig4, use_container_width=True)
 insight_box("scatter")
 
 # ------------------------------------------------------------
+# 구역 5: 장르별 총 관객 상자 그림 (영화 10편 이상인 장르만)
+# ------------------------------------------------------------
+st.divider()
+st.header("⑤ 장르별 총 관객의 상자 그림")
+
+MIN_MOVIES = 10  # 이 편수 이상인 장르만 그립니다
+box_genres = genre_counts.loc[genre_counts["편수"] >= MIN_MOVIES, "장르"].tolist()
+
+st.write(
+    f"영화가 {MIN_MOVIES}편 이상인 장르({', '.join(box_genres)})만 골랐습니다. "
+    "상자는 가운데 절반의 영화가 있는 범위이고, 상자 안의 선은 중앙값입니다. "
+    "수염 밖에 따로 찍힌 점에 마우스를 올리면 영화명이 나옵니다."
+)
+
+use_log_box = st.checkbox(
+    "총 관객 축을 로그 눈금으로 보기 (상자가 너무 납작할 때 켜 보세요)", key="log_box"
+)
+
+fig5 = go.Figure()
+for g in box_genres:
+    part = df[(df["genre_main"] == g)].dropna(subset=["total_audi"])
+    fig5.add_trace(
+        go.Box(
+            y=part["total_audi"],
+            name=g,
+            boxpoints="outliers",
+            hovertext=part["movieNm"],
+            marker=dict(color=genre_color[g], size=7),
+            line=dict(color=genre_color[g]),
+            fillcolor="rgba(255, 255, 255, 0)",
+        )
+    )
+fig5.update_layout(
+    height=600,
+    margin=dict(t=20, b=20, l=20, r=20),
+    xaxis_title="장르",
+    yaxis_title="총 관객 (명)",
+    showlegend=False,
+)
+fig5.update_yaxes(type="log" if use_log_box else "linear")
+st.plotly_chart(fig5, use_container_width=True)
+
+insight_box("box")
+
+# ------------------------------------------------------------
 # 다음 구역이 들어올 자리
 # ------------------------------------------------------------
 # st.divider()
-# st.header("⑤ ...")
+# st.header("⑥ ...")
