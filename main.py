@@ -94,7 +94,14 @@ fig1.update_layout(
 )
 st.plotly_chart(fig1, use_container_width=True)
 
-st.info("**이 그래프로 알 수 있는 것:** (여기에 한 문장을 적어 주세요.)")
+top1, top2 = genre_counts.iloc[0], genre_counts.iloc[1]
+total = genre_counts["편수"].sum()
+share_top2 = (top1["편수"] + top2["편수"]) / total * 100
+st.info(
+    f"**이 그래프로 알 수 있는 것:** '{top1['장르']}'({top1['편수']}편)와 "
+    f"'{top2['장르']}'({top2['편수']}편)가 전체의 {share_top2:.0f}%를 차지해, "
+    f"이 두 장르가 10위권 신작의 중심이었습니다."
+)
 
 # ------------------------------------------------------------
 # 다음 구역이 들어올 자리
