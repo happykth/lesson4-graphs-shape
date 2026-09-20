@@ -52,6 +52,26 @@ except Exception as e:
 
 
 # ------------------------------------------------------------
+# '이 그래프로 알 수 있는 것' 입력칸 (그래프마다 재사용)
+# ------------------------------------------------------------
+# 앱 화면에서 바로 적을 수 있고, 아래 INSIGHTS에 미리 적어 두면 처음부터 채워져 있습니다.
+INSIGHTS = {
+    "genre": "",
+}
+
+
+def insight_box(key: str):
+    text = st.text_input(
+        "✏️ 이 그래프로 알 수 있는 것 (한 문장)",
+        value=INSIGHTS.get(key, ""),
+        key=f"insight_{key}",
+        placeholder="여기에 한 문장을 적고 Enter를 누르세요.",
+    )
+    if text.strip():
+        st.info(f"**이 그래프로 알 수 있는 것:** {text.strip()}")
+
+
+# ------------------------------------------------------------
 # 제목
 # ------------------------------------------------------------
 st.title("🎬 영화 데이터 그래프 도감 2 - 분포와 관계")
@@ -94,14 +114,7 @@ fig1.update_layout(
 )
 st.plotly_chart(fig1, use_container_width=True)
 
-top1, top2 = genre_counts.iloc[0], genre_counts.iloc[1]
-total = genre_counts["편수"].sum()
-share_top2 = (top1["편수"] + top2["편수"]) / total * 100
-st.info(
-    f"**이 그래프로 알 수 있는 것:** '{top1['장르']}'({top1['편수']}편)와 "
-    f"'{top2['장르']}'({top2['편수']}편)가 전체의 {share_top2:.0f}%를 차지해, "
-    f"이 두 장르가 10위권 신작의 중심이었습니다."
-)
+insight_box("genre")
 
 # ------------------------------------------------------------
 # 다음 구역이 들어올 자리
