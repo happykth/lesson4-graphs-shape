@@ -61,6 +61,7 @@ INSIGHTS = {
     "hist": "",
     "scatter": "",
     "box": "",
+    "bubble": "",
 }
 
 
@@ -313,7 +314,69 @@ st.plotly_chart(fig5, use_container_width=True)
 insight_box("box")
 
 # ------------------------------------------------------------
+# 구역 6: 버블 그래프 (④ 산점도 + 점 크기 = 첫 주 관객)
+# ------------------------------------------------------------
+st.divider()
+st.header("⑥ 스크린 수와 총 관객의 관계 - 첫 주 관객을 크기로")
+st.write(
+    "④번 산점도와 같은 그래프에 점 크기로 개봉 첫 주 관객을 더했습니다. "
+    "버블이 클수록 첫 주 관객이 많습니다. 버블에 마우스를 올려 보세요."
+)
+
+bub = df.dropna(subset=["first_scrn", "total_audi", "first_week_audi"])
+
+use_log_bubble = st.checkbox(
+    "총 관객 축을 로그 눈금으로 보기 (관객 수 차이가 큰 영화를 함께 보기 좋습니다)",
+    key="log_bubble",
+)
+
+MAX_BUBBLE = 50  # 가장 큰 버블의 지름(픽셀)
+size_ref = 2.0 * bub["first_week_audi"].max() / (MAX_BUBBLE ** 2)
+
+fig6 = go.Figure()
+for g in genre_counts["장르"]:
+    part = bub[bub["genre_main"] == g]
+    if part.empty:
+        continue
+    fig6.add_trace(
+        go.Scatter(
+            x=part["first_scrn"],
+            y=part["total_audi"],
+            mode="markers",
+            name=g,
+            marker=dict(
+                color=genre_color[g],
+                size=part["first_week_audi"],
+                sizemode="area",
+                sizeref=size_ref,
+                sizemin=3,
+                opacity=0.7,
+                line=dict(color="#FFFFFF", width=0.5),
+            ),
+            customdata=part[["movieNm", "genre_main", "first_week_audi"]].values,
+            hovertemplate=(
+                "<b>%{customdata[0]}</b><br>"
+                "장르: %{customdata[1]}<br>"
+                "첫 관측일 스크린 수: %{x:,}개<br>"
+                "총 관객: %{y:,}명<br>"
+                "첫 주 관객: %{customdata[2]:,}명<extra></extra>"
+            ),
+        )
+    )
+fig6.update_layout(
+    height=650,
+    margin=dict(t=20, b=20, l=20, r=20),
+    xaxis_title="첫 관측일 스크린 수 (개)",
+    yaxis_title="총 관객 (명)",
+    legend_title_text="장르",
+)
+fig6.update_yaxes(type="log" if use_log_bubble else "linear")
+st.plotly_chart(fig6, use_container_width=True)
+
+insight_box("bubble")
+
+# ------------------------------------------------------------
 # 다음 구역이 들어올 자리
 # ------------------------------------------------------------
 # st.divider()
-# st.header("⑥ ...")
+# st.header("⑦ ...")
