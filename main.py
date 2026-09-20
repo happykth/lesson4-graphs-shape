@@ -59,6 +59,7 @@ INSIGHTS = {
     "genre": "",
     "treemap": "",
     "hist": "",
+    "scatter": "",
 }
 
 
@@ -214,7 +215,59 @@ st.success(
 insight_box("hist")
 
 # ------------------------------------------------------------
+# 구역 4: 첫 관측일 스크린 수와 총 관객 (산점도)
+# ------------------------------------------------------------
+st.divider()
+st.header("④ 스크린 수와 총 관객의 관계")
+st.write(
+    "점 하나가 영화 한 편입니다. 가로는 첫 관측일 스크린 수, 세로는 총 관객이고, "
+    "점 색은 장르를 뜻합니다. 점에 마우스를 올려 보세요."
+)
+
+sc = df.dropna(subset=["first_scrn", "total_audi"])
+
+use_log = st.checkbox("총 관객 축을 로그 눈금으로 보기 (관객 수 차이가 큰 영화를 함께 보기 좋습니다)")
+
+fig4 = go.Figure()
+for g in genre_counts["장르"]:  # 편수가 많은 장르부터 (도넛 그래프와 같은 색)
+    part = sc[sc["genre_main"] == g]
+    if part.empty:
+        continue
+    fig4.add_trace(
+        go.Scatter(
+            x=part["first_scrn"],
+            y=part["total_audi"],
+            mode="markers",
+            name=g,
+            marker=dict(
+                color=genre_color[g],
+                size=9,
+                opacity=0.85,
+                line=dict(color="#FFFFFF", width=0.5),
+            ),
+            customdata=part[["movieNm", "genre_main"]].values,
+            hovertemplate=(
+                "<b>%{customdata[0]}</b><br>"
+                "장르: %{customdata[1]}<br>"
+                "첫 관측일 스크린 수: %{x:,}개<br>"
+                "총 관객: %{y:,}명<extra></extra>"
+            ),
+        )
+    )
+fig4.update_layout(
+    height=600,
+    margin=dict(t=20, b=20, l=20, r=20),
+    xaxis_title="첫 관측일 스크린 수 (개)",
+    yaxis_title="총 관객 (명)",
+    legend_title_text="장르",
+)
+fig4.update_yaxes(type="log" if use_log else "linear")
+st.plotly_chart(fig4, use_container_width=True)
+
+insight_box("scatter")
+
+# ------------------------------------------------------------
 # 다음 구역이 들어올 자리
 # ------------------------------------------------------------
 # st.divider()
-# st.header("④ ...")
+# st.header("⑤ ...")
