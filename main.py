@@ -62,6 +62,7 @@ INSIGHTS = {
     "scatter": "",
     "box": "",
     "bubble": "",
+    "sunburst": "",
 }
 
 
@@ -376,7 +377,62 @@ st.plotly_chart(fig6, use_container_width=True)
 insight_box("bubble")
 
 # ------------------------------------------------------------
+# 구역 7: 제작 국가 -> 장르 선버스트 (칸 크기 = 영화 편수)
+# ------------------------------------------------------------
+st.divider()
+st.header("⑦ 제작 국가에서 장르로")
+st.write(
+    "안쪽 고리는 제작 국가, 바깥 고리는 그 나라 영화의 장르이고, 칸이 클수록 영화가 많습니다. "
+    "국가가 여러 개 적힌 영화(예: 영국|미국)는 첫 번째 국가만 썼습니다. "
+    "칸을 클릭하면 그 국가만 확대되고, 가운데를 클릭하면 되돌아옵니다."
+)
+
+sb = df.copy()
+sb["nation_main"] = (
+    sb["nation"].fillna("미분류").astype(str).str.split("|").str[0].str.strip()
+)
+sb.loc[sb["nation_main"] == "", "nation_main"] = "미분류"
+
+pair_counts = (
+    sb.groupby(["nation_main", "genre_main"]).size().reset_index(name="편수")
+)
+nation_counts = sb["nation_main"].value_counts()  # 편수가 많은 국가부터
+
+nation_color = {
+    n: WARM_COLORS[i % len(WARM_COLORS)] for i, n in enumerate(nation_counts.index)
+}
+
+sb_ids = [f"n::{n}" for n in nation_counts.index] + [
+    f"n::{n}::g::{g}" for n, g in zip(pair_counts["nation_main"], pair_counts["genre_main"])
+]
+sb_labels = list(nation_counts.index) + pair_counts["genre_main"].tolist()
+sb_parents = [""] * len(nation_counts) + [f"n::{n}" for n in pair_counts["nation_main"]]
+sb_values = nation_counts.tolist() + pair_counts["편수"].tolist()
+sb_colors = [nation_color[n] for n in nation_counts.index] + [
+    nation_color[n] for n in pair_counts["nation_main"]
+]
+
+fig7 = go.Figure(
+    go.Sunburst(
+        ids=sb_ids,
+        labels=sb_labels,
+        parents=sb_parents,
+        values=sb_values,
+        branchvalues="total",
+        marker=dict(colors=sb_colors, line=dict(color="#FFFFFF", width=1)),
+        hovertemplate=(
+            "<b>%{label}</b><br>영화 %{value}편<br>"
+            "전체의 %{percentRoot:.1%}<extra></extra>"
+        ),
+    )
+)
+fig7.update_layout(height=700, margin=dict(t=20, b=20, l=20, r=20))
+st.plotly_chart(fig7, use_container_width=True)
+
+insight_box("sunburst")
+
+# ------------------------------------------------------------
 # 다음 구역이 들어올 자리
 # ------------------------------------------------------------
 # st.divider()
-# st.header("⑦ ...")
+# st.header("⑧ ...")
