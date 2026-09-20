@@ -57,6 +57,7 @@ except Exception as e:
 # 앱 화면에서 바로 적을 수 있고, 아래 INSIGHTS에 미리 적어 두면 처음부터 채워져 있습니다.
 INSIGHTS = {
     "genre": "",
+    "treemap": "",
 }
 
 
@@ -117,7 +118,49 @@ st.plotly_chart(fig1, use_container_width=True)
 insight_box("genre")
 
 # ------------------------------------------------------------
+# 구역 2: 장르 안의 영화별 총 관객 (트리맵)
+# ------------------------------------------------------------
+st.divider()
+st.header("② 장르 안의 영화별 총 관객")
+st.write("큰 칸은 장르, 그 안의 작은 칸은 영화입니다. 칸이 클수록 총 관객이 많습니다. 칸에 마우스를 올려 보세요.")
+
+tm = df.dropna(subset=["total_audi"]).copy()
+tm = tm[tm["total_audi"] > 0]
+
+# 장르마다 같은 색을 쓰기 위한 색 지정 (편수가 많은 장르부터 색을 배정)
+genre_color = {
+    g: WARM_COLORS[i % len(WARM_COLORS)] for i, g in enumerate(genre_counts["장르"])
+}
+
+genre_totals = tm.groupby("genre_main")["total_audi"].sum()
+
+ids = [f"g:{g}" for g in genre_totals.index] + [f"m:{c}" for c in tm["movieCd"]]
+labels = list(genre_totals.index) + tm["movieNm"].tolist()
+parents = [""] * len(genre_totals) + [f"g:{g}" for g in tm["genre_main"]]
+values = genre_totals.tolist() + tm["total_audi"].tolist()
+colors = [genre_color[g] for g in genre_totals.index] + [
+    genre_color[g] for g in tm["genre_main"]
+]
+
+fig2 = go.Figure(
+    go.Treemap(
+        ids=ids,
+        labels=labels,
+        parents=parents,
+        values=values,
+        branchvalues="total",
+        marker=dict(colors=colors, line=dict(color="#FFFFFF", width=1)),
+        textinfo="label",
+        hovertemplate="<b>%{label}</b><br>총 관객: %{value:,}명<extra></extra>",
+    )
+)
+fig2.update_layout(height=650, margin=dict(t=20, b=20, l=20, r=20))
+st.plotly_chart(fig2, use_container_width=True)
+
+insight_box("treemap")
+
+# ------------------------------------------------------------
 # 다음 구역이 들어올 자리
 # ------------------------------------------------------------
 # st.divider()
-# st.header("② ...")
+# st.header("③ ...")
