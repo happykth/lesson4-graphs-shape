@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 DATA_URL = (
-    "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_movies.csv"
+    "https://raw.githubusercontent.com/happykth/data/main/kobis_movies.csv"
 )
 
 # 따뜻한 색 팔레트
